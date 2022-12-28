@@ -16,7 +16,7 @@ app.get('/redeem/:cardtoken', (req, res) => {
 })
 
 
-app.get("/recipient/:cardtoken", (req, res) => {
+app.get("/api/recipient/:cardtoken", (req, res) => {
     const recipient = recipients[req.params.cardtoken]
     res.json(recipient).send()
 })

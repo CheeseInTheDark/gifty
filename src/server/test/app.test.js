@@ -70,7 +70,7 @@ describe("app", () => {
 
     describe("recipient", () => {
         it("returns the name of the recipient with the given token", async () => {
-            let response = await request(subject).get("/recipient/woobular")
+            let response = await request(subject).get("/api/recipient/woobular")
 
             expect(JSON.parse(response.text)).toEqual({name: "Gift Person"})
         })
