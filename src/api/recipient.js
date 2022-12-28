@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 
-async function getRecipient(token) {
+async function get(token) {
   try {
     const response = await axios.get(`/api/recipient/${token}`)
     return response.data
@@ -10,4 +10,4 @@ async function getRecipient(token) {
   }
 }
 
-export default getRecipient
+export default { get }
