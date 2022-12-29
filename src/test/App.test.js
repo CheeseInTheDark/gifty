@@ -14,6 +14,13 @@ const recipientData = {
 
 describe("App", () => {
 
+  beforeEach(() => {
+    delete window.location
+    window.location = {
+      href: "http://localhost/redeem/thetoken"
+    }
+  })
+
   test("waits for the recipient's name to load", async () => {
     recipient.get.mockReturnValue(new Promise(resolve => { }))
 
@@ -43,12 +50,13 @@ describe("App", () => {
 
       render(<App />)
 
-      giftCode.redeem.mockImplementation(code => Promise.resolve(code === "1234" ? {
-        success: true
-      } : {
-        success: false,
-        message: failureMessage
-      }))
+      giftCode.redeem.mockImplementation((code, identityToken) => 
+        Promise.resolve(code === "1234" && identityToken === "thetoken" ? {
+          success: true
+        } : {
+          success: false,
+          message: failureMessage
+        }))
 
       await screen.findByText(/Boat/)
     })
@@ -57,10 +65,30 @@ describe("App", () => {
       await act(async  () => {
         await userEvent.click(screen.getByRole("textbox"))
         await userEvent.keyboard("1233")
-        await userEvent.click(screen.getByText("REDEEEEEEM"))
+        await userEvent.click(screen.getByText("Redeem yo'self"))
       })
 
       expect(await screen.findByText(/Your code, it is wrong/)).toBeVisible()
+    })
+
+    it("does not show an error message if redeeming is successful", async () => {
+      await act(async  () => {
+        await userEvent.click(screen.getByRole("textbox"))
+        await userEvent.keyboard("1234")
+        await userEvent.click(screen.getByText("Redeem yo'self"))
+      })
+
+      expect(screen.queryByText(/Your code, it is wrong/)).toBeNull()
+    })
+
+    it("sends the identity token with the code", async () => {
+      await act(async  () => {
+        await userEvent.click(screen.getByRole("textbox"))
+        await userEvent.keyboard("1234")
+        await userEvent.click(screen.getByText("Redeem yo'self"))
+      })
+
+      expect(giftCode.redeem).toHaveBeenCalledWith("1234", "thetoken")
     })
   })
 })

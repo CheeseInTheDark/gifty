@@ -25,13 +25,27 @@ describe("app", () => {
 
         fs.writeFileSync(path.join(publicPath, "index.html"), "Cool index place")
 
-        fs.writeFileSync(path.join(dataPath, "recipients.notjson"), JSON.stringify({
+        fs.writeFileSync(path.join(dataPath, "recipients.json"), JSON.stringify({
             "woobular": {
                 "name": "Gift Person"
             },
             "Tubular": {
                 "name": "Person with tubes"
             }
+        }))
+
+        fs.writeFileSync(path.join(dataPath, "recipients.json"), JSON.stringify({
+            "woobular": {
+                "name": "Gift Person"
+            },
+            "Tubular": {
+                "name": "Person with tubes"
+            }
+        }))
+
+        fs.writeFileSync(path.join(dataPath, "gift-codes.json"), JSON.stringify({
+            "woobular": "1234",
+            "Tubular": "4334"
         }))
 
         subject = require('../app')
@@ -68,11 +82,38 @@ describe("app", () => {
         })
     })
 
-    describe("recipient", () => {
-        it("returns the name of the recipient with the given token", async () => {
+    describe("/api/recipient", () => {
+        it("returns the name of the recipient with the given token for a GET", async () => {
             let response = await request(subject).get("/api/recipient/woobular")
 
             expect(JSON.parse(response.text)).toEqual({name: "Gift Person"})
+        })
+    })
+
+    describe("/api/redeem", () => {
+        it("returns success if the code matches for the given token", async () => {
+            let response = await request(subject).post("/api/redeem").send({
+                code: "1234", 
+                identityToken: "woobular"
+            })
+
+            expect(JSON.parse(response.text)).toEqual({ success: true })
+
+            response = await request(subject).post("/api/redeem").send({
+                code: "4334", 
+                identityToken: "Tubular"
+            })
+
+            expect(JSON.parse(response.text)).toEqual({ success: true })
+        })
+
+        it("returns a failure message if the code does not match for the given token", async () => {
+            let response = await request(subject).post("/api/redeem").send({
+                code: "1234", 
+                identityToken: "Tubular"
+            })
+
+            expect(JSON.parse(response.text)).toMatchObject({ success: false, message: expect.stringMatching(/.+/) })
         })
     })
 })

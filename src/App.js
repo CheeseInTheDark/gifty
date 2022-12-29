@@ -15,7 +15,10 @@ function App({ initializeApp }) {
   }, [])
 
   async function submitCode() {
-    const result = await giftCodeApi.redeem(enteredGiftCode)
+    const result = await giftCodeApi.redeem(
+      enteredGiftCode, 
+      window.location.href.split("/").slice(-1)[0]
+    )
 
     if (!result.success) setGiftCodeMessage(result.message)
   }
@@ -28,7 +31,7 @@ function App({ initializeApp }) {
       <input onChange={event => {
         setEnteredGiftCode(event.target.value)
       }}/>
-      <button onClick={submitCode}>REDEEEEEEM</button>
+      <button onClick={submitCode}>Redeem yo'self</button>
       {giftCodeMessage ? <div>{giftCodeMessage}</div> : null}
     </div> : <div>THE GIFTS ARE LOADING</div>
   )
