@@ -26,6 +26,9 @@ describe("app", () => {
         fs.writeFileSync(path.join(publicPath, "index.html"), "Cool index place")
 
         fs.writeFileSync(path.join(dataPath, "recipients.json"), JSON.stringify({
+            "coolidentitytoken": {
+                "name": "Charlie"
+            },
             "woobular": {
                 "name": "Gift Person"
             },
@@ -34,12 +37,9 @@ describe("app", () => {
             }
         }))
 
-        fs.writeFileSync(path.join(dataPath, "recipients.json"), JSON.stringify({
+        fs.writeFileSync(path.join(dataPath, "gift-exchange.json"), JSON.stringify({
             "woobular": {
-                "name": "Gift Person"
-            },
-            "Tubular": {
-                "name": "Person with tubes"
+                "itemWanted": "bag o bricks"
             }
         }))
 
@@ -82,15 +82,15 @@ describe("app", () => {
         })
     })
 
-    describe("/api/recipient", () => {
-        it("returns the name of the recipient with the given token for a GET", async () => {
+    describe("/api/recipient GET", () => {
+        it("returns the name of the recipient with the given token", async () => {
             let response = await request(subject).get("/api/recipient/woobular")
 
-            expect(JSON.parse(response.text)).toEqual({name: "Gift Person"})
+            expect(JSON.parse(response.text)).toEqual({name: "Gift Person", identityToken: "woobular"})
         })
     })
 
-    describe("/api/redeem", () => {
+    describe("/api/redeem POST", () => {
         it("returns success if the code matches for the given token", async () => {
             let response = await request(subject).post("/api/redeem").send({
                 code: "1234", 
@@ -114,6 +114,90 @@ describe("app", () => {
             })
 
             expect(JSON.parse(response.text)).toMatchObject({ success: false, message: expect.stringMatching(/.+/) })
+        })
+    })
+
+    describe("/api/gift-exchange/ POST", () => {
+        it("returns what the person joining the exchange needs to get and for who", async () => {
+            let response = await request(subject).post("/api/gift-exchange").send({
+                itemWanted: "Suggestion Box",
+                identityToken: "Tubular"
+            })
+
+            expect(JSON.parse(response.text)).toMatchObject({
+                assignedGiftRecipient: {
+                    name: "Gift Person",
+                    itemWanted: "bag o bricks"
+                },
+                itemWanted: "Suggestion Box"
+            })
+        })
+
+        it("assigns the joining person to give a gift to whoever currently has a wish list and no gift giver", async () => {
+            await request(subject).post("/api/gift-exchange").send({
+                itemWanted: "Suggestion Box",
+                identityToken: "Tubular"
+            })
+
+            const giftExchangeInfo = JSON.parse(fs.readFileSync(path.join(dataPath, "gift-exchange.json")))
+
+            expect(giftExchangeInfo).toEqual({
+                "woobular": {
+                    "itemWanted": "bag o bricks"
+                },
+                "Tubular": {
+                    "recipientToken": "woobular",
+                    "itemWanted": "Suggestion Box"
+                }
+            })
+        })
+
+        it("assigns the initial member of the pool to give a gift to the last person to join", async () => {
+            await request(subject).post("/api/gift-exchange").send({
+                itemWanted: "Suggestion Box",
+                identityToken: "Tubular"
+            })
+
+            await request(subject).post("/api/gift-exchange").send({
+                itemWanted: "Pony",
+                identityToken: "coolidentitytoken"
+            })
+
+            const giftExchangeInfo = JSON.parse(fs.readFileSync(path.join(dataPath, "gift-exchange.json")))
+
+            expect(giftExchangeInfo).toEqual({
+                "woobular": {
+                    "recipientToken": "coolidentitytoken",
+                    "itemWanted": "bag o bricks"
+                },
+                "Tubular": {
+                    "recipientToken": "woobular",
+                    "itemWanted": "Suggestion Box"
+                },
+                "coolidentitytoken": {
+                    "recipientToken": "Tubular",
+                    "itemWanted": "Pony"
+                }
+            })
+        })
+    })
+
+    describe("/api/gift-exchange/:identitytoken GET", () => {
+        it("returns the gift exchange info if it exists", async () => {
+            await request(subject).post("/api/gift-exchange").send({
+                itemWanted: "Suggestion Box",
+                identityToken: "Tubular"
+            })
+
+            const response = await request(subject).get("/api/gift-exchange/Tubular")
+
+            expect(JSON.parse(response.text)).toEqual({
+                assignedGiftRecipient: {
+                    name: "Gift Person",
+                    itemWanted: "bag o bricks"
+                },
+                itemWanted: "Suggestion Box"
+            })
         })
     })
 })
