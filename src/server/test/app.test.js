@@ -48,6 +48,11 @@ describe("app", () => {
             "Tubular": "4334"
         }))
 
+        fs.writeFileSync(path.join(dataPath, "gift-options.json"), JSON.stringify([
+            "some image URL",
+            "another image URL"
+        ]))
+
         subject = require('../app')
     })
     
@@ -198,6 +203,22 @@ describe("app", () => {
                 },
                 itemWanted: "Suggestion Box"
             })
+        })
+    })
+
+    describe("/api/gift-exchange/items GET", () => {
+        it("returns the list of gifts", async () => {
+            const response = await request(subject).get("/api/gift-exchange/items")
+
+            expect(JSON.parse(response.text)).toEqual([
+                {
+                    imageUrl: "some image URL",
+                    inStock: true
+                }, {
+                    imageUrl: "another image URL",
+                    inStock: true
+                }
+            ])
         })
     })
 })

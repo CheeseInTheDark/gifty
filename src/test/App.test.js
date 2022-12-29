@@ -14,6 +14,9 @@ const recipientData = {
   identityToken: "thetoken"
 }
 
+const testImage1 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAAMSURBVBhXY2BgYAAAAAQAAVzN/2kAAAAASUVORK5CYII="
+const testImage2 = "data:image/bmp;base64,Qk16AAAAAAAAAHYAAAAoAAAAAQAAAAEAAAABAAQAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAgAAAAICAAIAAAACAAIAAgIAAAICAgADAwMAAAAD/AAD/AAAA//8A/wAAAP8A/wD//wAA////APAAAAA="
+
 describe("App", () => {
 
   beforeEach(() => {
@@ -21,8 +24,6 @@ describe("App", () => {
     window.location = {
       href: "http://localhost/redeem/thetoken"
     }
-
-
   })
 
   test("passes the recipient's token to retrieve their info", async () => {
@@ -107,12 +108,40 @@ describe("App", () => {
             }
           }))
 
-          await userEvent.click(screen.getByText("Something irritating"))
+          giftExchange.getItems.mockReturnValue(Promise.resolve([
+            {
+              "imageUrl": testImage1,
+              "inStock": true
+            }, {
+              "imageUrl": testImage2,
+              "inStock": false
+            }
+          ]))
+
+          giftExchange.selectGift.mockReturnValue(new Promise(resolve => {}))
+
+          await act(async () => {
+            await userEvent.click(screen.getByText("Something irritating"))
+          })
         })
 
         it("submits the selection", () => {
           expect(giftExchange.join).toHaveBeenCalledWith("Something irritating", "thetoken")
         })
+
+        it("displays available gifts from the gift shop", async () => {
+          expect(await screen.findAllByRole('img')).toEqual([
+            expect.toHaveAttribute("src", testImage1), 
+            expect.toHaveAttribute("src", testImage2)
+          ])
+        })
+
+        it("shows who you're shopping for and what they want", async () => {
+          expect(await screen.findByText(/Farlfarnarsonnur/)).toBeVisible()
+          expect(await screen.findByText(/something that tastes like grapes but isn't grapes/)).toBeVisible()
+        })
+
+       
       })
     })
 

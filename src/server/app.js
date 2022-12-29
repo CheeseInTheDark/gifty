@@ -8,6 +8,7 @@ const { staticDirectory, dataDirectory } = require('./settings')
 
 const recipients = readData("recipients.json")
 const giftCodesByRecipient = readData("gift-codes.json")
+const giftOptions = readData("gift-options.json")
 
 function readData(filepath) {
     return JSON.parse(fs.readFileSync(path.join(dataDirectory, filepath)))
@@ -67,6 +68,16 @@ app.post("/api/gift-exchange", express.json(), (req, res) => {
     })
 })
 
+app.get("/api/gift-exchange/items", (req, res) => {
+    const response = giftOptions.map(option => ({
+        imageUrl: option,
+        inStock: true
+    }))
+
+    res.json(response)
+})
+
+
 app.get("/api/gift-exchange/:identityToken", express.json(), (req, res) => {
     const giftExchange = readData("gift-exchange.json")
 
@@ -81,6 +92,7 @@ app.get("/api/gift-exchange/:identityToken", express.json(), (req, res) => {
         itemWanted
     })
 })
+
 
 app.use(express.static(staticDirectory))
 

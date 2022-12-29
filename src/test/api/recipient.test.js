@@ -3,7 +3,7 @@ import axios from 'axios'
 
 describe("recipient api", () => {
     test("adds token to path", () => {
-        jest.spyOn(axios, "get")
+        jest.spyOn(axios, "get").mockImplementation(() => Promise.resolve({ data: "Response "}))
 
         subject.get("some kinda token")
     

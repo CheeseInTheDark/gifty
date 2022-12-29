@@ -4,7 +4,7 @@ import axios from 'axios'
 describe("redeem gift code api", () => {
 
     test("sends gift code", () => {
-        jest.spyOn(axios, "post")
+        jest.spyOn(axios, "post").mockImplementation(() => Promise.resolve({ data: "Response "}))
 
         subject.redeem("EXCELLENT CODE", "someone's cool identity token")
     

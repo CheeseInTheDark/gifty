@@ -50,10 +50,11 @@ const choices = [
     "Something to match my mood",
 ]
 
-export default function WishlistEntry({ recipient }) {
+export default function WishlistEntry({ recipient, next }) {
 
     async function submit(choice) {
-        giftExchangeApi.join(choice, recipient.identityToken)
+        const giftExchangeEntry = await giftExchangeApi.join(choice, recipient.identityToken)
+        next(giftExchangeEntry)
     }
 
     return <>
