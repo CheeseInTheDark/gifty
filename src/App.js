@@ -6,6 +6,7 @@ import recipientApi from './api/recipient'
 import GiftCodeEntry from './GiftCodeEntry'
 import WishListEntry from './WishListEntry'
 import GiftShop from './GiftShop'
+import TreeView from './TreeView'
 
 
 function App() {
@@ -23,12 +24,15 @@ function App() {
 
   const steps = {
     "loading": <div>THE GIFTS ARE LOADING</div>,
-    "redeem": <GiftCodeEntry recipient={recipient} next={() => setCurrentStep("wish-list")}/>,
+    "redeem": <GiftCodeEntry recipient={recipient} next={() => setCurrentStep("wish-list")} />,
     "wish-list": <WishListEntry recipient={recipient} next={(giftExchangeEntry) => {
       setCurrentStep("shop")
       setGiftExchangeEntry(giftExchangeEntry)
-    }}/>,
-    "shop": <GiftShop shopper={recipient} giftAssignment={giftExchangeEntry?.assignedGiftRecipient}/>
+    }} />,
+    "shop": <GiftShop shopper={recipient} giftAssignment={giftExchangeEntry?.assignedGiftRecipient} next={() => {
+      setCurrentStep("tree")
+    }} />,
+    "tree": <TreeView giftExchangeEntry={giftExchangeEntry}/>
   }
 
   return steps[currentStep]

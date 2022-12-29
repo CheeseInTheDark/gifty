@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import App from '../App';
 import recipient from '../api/recipient'
 import giftCode from '../api/giftCode'
@@ -118,8 +118,6 @@ describe("App", () => {
             }
           ]))
 
-          giftExchange.selectGift.mockReturnValue(new Promise(resolve => {}))
-
           await act(async () => {
             await userEvent.click(screen.getByText("Something irritating"))
           })
@@ -141,20 +139,48 @@ describe("App", () => {
           expect(await screen.findByText(/something that tastes like grapes but isn't grapes/)).toBeVisible()
         })
 
-        it("submits a selected in-stock gift", async () => {
-          const inStockItem = (await screen.findAllByRole('img'))[0]
-          
-          await act(async () => { await userEvent.click(inStockItem) })
-
-          expect(giftExchange.selectGift).toHaveBeenCalledWith("thetoken", testImage1)
-        })
-
         it("does not allow selection of items that are out of stock", async () => {
           const outOfStockItem = (await screen.findAllByRole('img'))[1]
           
           await act(async () => { await userEvent.click(outOfStockItem) })
 
           expect(giftExchange.selectGift).not.toHaveBeenCalled()
+        })
+
+        describe("and selection of a gift to give", () => {
+          beforeEach(async () => {
+            giftExchange.selectGift.mockReturnValue(Promise.resolve({ success: true }))
+
+            const inStockItem = (await screen.findAllByRole('img'))[0]
+          
+            await act(async () => { await userEvent.click(inStockItem) })
+          })
+
+          it("submits the selected in-stock gift", async () => {
+            expect(giftExchange.selectGift).toHaveBeenCalledWith("thetoken", testImage1)
+          })
+  
+          it("shows a message that their gift is on the way", async () => {
+            expect(await screen.findByText(/gift for Farlfarnarsonnur/)).toBeVisible()
+          })
+
+          describe("and dismissal of the gift message", () => {
+            beforeEach(async () => {
+              const okayButton = await screen.findByText(/Why are you showing me a popup\?/)
+
+              await act(async () => { await userEvent.click(okayButton)})
+            })
+
+            it("shows a christmas tree", async () => {
+              expect(await screen.findByAltText("Christmas tree")).toBeVisible()
+            })
+
+            it("hides the gift message", async () => {
+              await waitFor(async () => {
+                expect(await screen.queryByText(/gift for Farlfarnarsonnur/)).not.toBeInTheDocument()
+              })
+            })
+          })
         })
       })
     })
