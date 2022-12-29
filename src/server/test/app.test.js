@@ -234,6 +234,22 @@ describe("app", () => {
                 expect(response.status).toBe(400)
             })
 
+            it("returns an error message when someone has already selected a gift", async () => {
+                await request(subject).post("/api/gift-exchange/woobular/selected-gift").send({
+                    gift: "some image URL"
+                })
+
+                const response = await request(subject).post("/api/gift-exchange/woobular/selected-gift").send({
+                    gift: "some image URL"
+                })
+
+                expect(JSON.parse(response.text)).toEqual({
+                    success: false,
+                    message: "You've already selected a gift.  Stop trying to get more gifts for free.",
+                    gift: "some image URL"
+                })
+            })
+
             describe("and the gift is in stock and matches a gift in the options list", () => {
                 let response
 

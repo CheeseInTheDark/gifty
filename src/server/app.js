@@ -98,6 +98,11 @@ app.post("/api/gift-exchange/:identityToken/selected-gift", express.json(), (req
         return
     }
 
+    if (giftExchange[identityToken].itemGivenToRecipient) {
+        res.json({ success: false, message: "You've already selected a gift.  Stop trying to get more gifts for free.", gift })
+        return
+    }
+
     if (inStock) {
         giftExchange[identityToken].itemGivenToRecipient = gift
         saveData("gift-exchange.json", giftExchange)
