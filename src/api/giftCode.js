@@ -5,7 +5,7 @@ async function redeem(code, identityToken) {
   try {
     const response = await axios.post("/api/redeem/", { code, identityToken })
     return response.data
-  } catch(error) {
+  } catch (error) {
     console.log(error)
   }
 }

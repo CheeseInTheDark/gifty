@@ -14,7 +14,7 @@ export default function GiftShop({ shopper, giftAssignment }) {
         {items.map(({ imageUrl, inStock }) => 
             <div key={imageUrl}>
                 
-                <img src={imageUrl}/>
+                <img src={imageUrl} onClick={() => inStock && giftExchangeApi.selectGift(shopper.identityToken, imageUrl)}/>
                 { !inStock ? <div>This item is out of stock!  Yes, we know, we are also shocked by this</div> : null }
             </div>
         )}

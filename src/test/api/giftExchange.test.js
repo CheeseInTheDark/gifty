@@ -53,4 +53,30 @@ describe("gift exchange api", () => {
             await subject.getItems()
         })
     })
+
+    describe("select gift", () => {
+        test("posts the selected gift to the identity token in the gift exchange", () => {
+            jest.spyOn(axios, "post").mockImplementation(() => Promise.resolve({ data: "Response "}))
+
+            subject.selectGift("someone's cool identity token", "EXCELLENT ITEM")
+        
+            expect(axios.post).toHaveBeenCalledWith("/api/gift-exchange/someone's cool identity token/selected-gift", { 
+                gift: "EXCELLENT ITEM"
+            })
+        })
+
+        test("returns the result from response", async () => {
+            jest.spyOn(axios, "post").mockImplementation(() => Promise.resolve({ data: "Response" }))
+
+            const result = await subject.join("yet another cool token", "ITEM?  Item.")
+
+            expect(result).toEqual("Response")
+        })
+
+        test("consumes exceptions", async () => {
+            jest.spyOn(axios, "post").mockImplementation(() => Promise.reject())
+
+            await subject.join("Please explode please", "a token, again again")
+        })
+    })
 })

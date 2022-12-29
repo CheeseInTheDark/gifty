@@ -78,6 +78,35 @@ app.get("/api/gift-exchange/items", (req, res) => {
 })
 
 
+app.post("/api/gift-exchange/:identityToken/selected-gift", express.json(), (req, res) => {
+    const { identityToken } = req.params
+    const { gift } = req.body
+
+    const giftExchange = readData("gift-exchange.json")
+
+    const isValidGift = giftOptions.includes(gift)
+
+    if (!isValidGift) {
+        res.status(400).send()
+        return
+    }
+
+    const inStock = !Object.values(giftExchange).some(entry => entry.itemGivenToRecipient === gift)
+
+    if (!giftExchange[identityToken]) {
+        res.status(404).send()
+        return
+    }
+
+    if (inStock) {
+        giftExchange[identityToken].itemGivenToRecipient = gift
+        saveData("gift-exchange.json", giftExchange)
+        res.json({ success: true, gift })
+    } else {
+        res.json({ success: false, message: "This gift just ran out of stock!  Try another one", gift})
+    }
+})
+
 app.get("/api/gift-exchange/:identityToken", express.json(), (req, res) => {
     const giftExchange = readData("gift-exchange.json")
 

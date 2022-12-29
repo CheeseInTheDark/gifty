@@ -141,7 +141,21 @@ describe("App", () => {
           expect(await screen.findByText(/something that tastes like grapes but isn't grapes/)).toBeVisible()
         })
 
-       
+        it("submits a selected in-stock gift", async () => {
+          const inStockItem = (await screen.findAllByRole('img'))[0]
+          
+          await act(async () => { await userEvent.click(inStockItem) })
+
+          expect(giftExchange.selectGift).toHaveBeenCalledWith("thetoken", testImage1)
+        })
+
+        it("does not allow selection of items that are out of stock", async () => {
+          const outOfStockItem = (await screen.findAllByRole('img'))[1]
+          
+          await act(async () => { await userEvent.click(outOfStockItem) })
+
+          expect(giftExchange.selectGift).not.toHaveBeenCalled()
+        })
       })
     })
 

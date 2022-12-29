@@ -28,7 +28,7 @@ function App() {
       setCurrentStep("shop")
       setGiftExchangeEntry(giftExchangeEntry)
     }}/>,
-    "shop": <GiftShop recipient={recipient} giftAssignment={giftExchangeEntry?.assignedGiftRecipient}/>
+    "shop": <GiftShop shopper={recipient} giftAssignment={giftExchangeEntry?.assignedGiftRecipient}/>
   }
 
   return steps[currentStep]

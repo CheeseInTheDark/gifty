@@ -2,6 +2,7 @@ import request from 'supertest'
 import fs from 'fs'
 import 'core-js'
 import path from 'path'
+import { isObject } from 'util'
 
 jest.mock('../settings', () => {    
     const path = require('path')
@@ -202,6 +203,110 @@ describe("app", () => {
                     itemWanted: "bag o bricks"
                 },
                 itemWanted: "Suggestion Box"
+            })
+        })
+    })
+
+    describe("/api/gift-exchange/:identitytoken/selected-gift POST", () => {
+        it("returns 404 when there is no gift exchange record for the requestor", async () => {
+            const response = await request(subject).post("/api/gift-exchange/bwooog/selected-gift").send({
+                gift: "some image URL"
+            })
+
+            expect(response.status).toBe(404)
+        })
+
+        describe("when there is a gift exchange record for the requestor with a recipient", () => {
+            beforeEach(() => {
+                fs.writeFileSync(path.join(dataPath, "gift-exchange.json"), JSON.stringify({
+                    "woobular": {
+                        "itemWanted": "bag o bricks",
+                        "recipientToken": "Tubular"
+                    }
+                }))
+            })
+
+            it("returns 400 when the gift is not in the options list", async () => {
+                const response = await request(subject).post("/api/gift-exchange/woobular/selected-gift").send({
+                    gift: "some malicious image URL.  Shame on you."
+                })
+
+                expect(response.status).toBe(400)
+            })
+
+            describe("and the gift is in stock and matches a gift in the options list", () => {
+                let response
+
+                beforeEach(async () => {
+                    response = await request(subject).post("/api/gift-exchange/woobular/selected-gift").send({
+                        gift: "some image URL"
+                    })
+                })
+
+                it("returns success", async () => {
+                    expect(JSON.parse(response.text)).toEqual({
+                        success: true,
+                        gift: "some image URL"
+                    })
+                })
+        
+                it("updates the gift someone has received", async () => {
+                    const giftExchangeInfo = JSON.parse(fs.readFileSync(path.join(dataPath, "gift-exchange.json")))
+
+                    expect(giftExchangeInfo).toEqual({
+                        "woobular": {
+                            "itemWanted": "bag o bricks",
+                            "recipientToken": "Tubular",
+                            "itemGivenToRecipient": "some image URL"
+                        }
+                    })
+                })
+            })
+
+            describe("and the gift is no longer in stock, but matches a gift in the options list", () => {
+                let response
+
+                beforeEach(async () => {
+                    fs.writeFileSync(path.join(dataPath, "gift-exchange.json"), JSON.stringify({
+                        "woobular": {
+                            "itemWanted": "bag o bricks",
+                            "recipientToken": "Tubular"
+                        },
+                        "Tubular": {
+                            "itemWanted": "bigger bag o bricks",
+                            "recipientToken": "woobular",
+                            "itemGivenToRecipient": "some image URL"
+                        }
+                    }))
+
+                    response = await request(subject).post("/api/gift-exchange/woobular/selected-gift").send({
+                        gift: "some image URL"
+                    })
+                })
+
+                it("returns failure with a message", async () => {
+                    expect(JSON.parse(response.text)).toEqual({
+                        success: false,
+                        message: "This gift just ran out of stock!  Try another one",
+                        gift: "some image URL"
+                    })
+                })
+        
+                it("does not update the gift someone has received", async () => {
+                    const giftExchangeInfo = JSON.parse(fs.readFileSync(path.join(dataPath, "gift-exchange.json")))
+
+                    expect(giftExchangeInfo).toEqual({
+                        "woobular": {
+                            "itemWanted": "bag o bricks",
+                            "recipientToken": "Tubular"
+                        },
+                        "Tubular": {
+                            "itemWanted": "bigger bag o bricks",
+                            "recipientToken": "woobular",
+                            "itemGivenToRecipient": "some image URL"
+                        }
+                    })
+                })
             })
         })
     })
