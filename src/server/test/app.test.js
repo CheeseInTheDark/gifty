@@ -38,6 +38,8 @@ describe("app", () => {
             }
         }))
 
+        fs.writeFileSync(path.join(dataPath, "redeemed-cards.json"), JSON.stringify(["woobular"]))
+
         fs.writeFileSync(path.join(dataPath, "gift-exchange.json"), JSON.stringify({
             "woobular": {
                 "itemWanted": "bag o bricks"
@@ -89,28 +91,45 @@ describe("app", () => {
     })
 
     describe("/api/recipient GET", () => {
-        it("returns the name of the recipient with the given token", async () => {
+        it("returns the name and redemption status of the recipient with the given token", async () => {
             let response = await request(subject).get("/api/recipient/woobular")
 
-            expect(JSON.parse(response.text)).toEqual({name: "Gift Person", identityToken: "woobular"})
+            expect(JSON.parse(response.text)).toEqual({name: "Gift Person", redeemed: true, identityToken: "woobular"})
+
+            response = await request(subject).get("/api/recipient/Tubular")
+
+            expect(JSON.parse(response.text)).toEqual({name: "Person with tubes", redeemed: false, identityToken: "Tubular"})
         })
     })
 
     describe("/api/redeem POST", () => {
-        it("returns success if the code matches for the given token", async () => {
-            let response = await request(subject).post("/api/redeem").send({
-                code: "1234", 
-                identityToken: "woobular"
+        describe("if the code matches the given token", () => {
+            let response1
+            let response2
+
+            beforeEach(async () => {
+                response1 = await request(subject).post("/api/redeem").send({
+                    code: "1234", 
+                    identityToken: "woobular"
+                })
+
+                response2 = await request(subject).post("/api/redeem").send({
+                    code: "4334", 
+                    identityToken: "Tubular"
+                })
             })
 
-            expect(JSON.parse(response.text)).toEqual({ success: true })
-
-            response = await request(subject).post("/api/redeem").send({
-                code: "4334", 
-                identityToken: "Tubular"
+            it("returns success if the code matches for the given token", async () => {
+                expect(JSON.parse(response1.text)).toEqual({ success: true })
+                expect(JSON.parse(response2.text)).toEqual({ success: true })
             })
 
-            expect(JSON.parse(response.text)).toEqual({ success: true })
+            it("updates the recipients' redemption statuseses", async () => {
+                const redeemedCards = JSON.parse(fs.readFileSync(path.join(dataPath, "redeemed-cards.json")))
+
+                expect(redeemedCards).toHaveLength(2)
+                expect(redeemedCards).toEqual(expect.arrayContaining(["woobular", "Tubular"]))
+            })
         })
 
         it("returns a failure message if the code does not match for the given token", async () => {
@@ -201,6 +220,35 @@ describe("app", () => {
                 assignedGiftRecipient: {
                     name: "Gift Person",
                     itemWanted: "bag o bricks"
+                },
+                itemWanted: "Suggestion Box"
+            })
+        })
+
+        it("omits the assigned gift recipient if nobody has been assigned yet", async () => {
+            const response = await request(subject).get("/api/gift-exchange/woobular")
+
+            expect(JSON.parse(response.text)).toEqual({
+                itemWanted: "bag o bricks"
+            })
+        })
+
+        it("returns the gift given if it exists", async () => {
+            await request(subject).post("/api/gift-exchange").send({
+                itemWanted: "Suggestion Box",
+                identityToken: "Tubular"
+            })
+            await request(subject).post("/api/gift-exchange/Tubular/selected-gift").send({
+                gift: "some image URL"
+            })
+
+            const response = await request(subject).get("/api/gift-exchange/Tubular")
+
+            expect(JSON.parse(response.text)).toEqual({
+                assignedGiftRecipient: {
+                    name: "Gift Person",
+                    itemWanted: "bag o bricks",
+                    itemReceived: "some image URL"
                 },
                 itemWanted: "Suggestion Box"
             })

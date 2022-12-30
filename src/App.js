@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 
 import recipientApi from './api/recipient'
+import giftExchangeApi from './api/giftExchange'
 
 import GiftCodeEntry from './GiftCodeEntry'
 import WishListEntry from './WishListEntry'
@@ -13,14 +14,35 @@ function App() {
   const [recipient, setRecipient] = useState()
   const [giftExchangeEntry, setGiftExchangeEntry] = useState()
   const [currentStep, setCurrentStep] = useState("loading")
+  const [showGiftSent, setShowGiftSent] = useState()
+
+  async function initialize() {
+    const recipientToken = window.location.href.split("/").slice(-1)[0]
+    const [giftExchangeInfo, recipient] = await Promise.all([giftExchangeApi.get(recipientToken), recipientApi.get(recipientToken)])
+
+    setRecipient(recipient)
+    setGiftExchangeEntry(giftExchangeInfo)
+
+    const isInGiftExchange = !!giftExchangeInfo
+    const hasAssignedPerson = !!giftExchangeInfo?.assignedGiftRecipient
+    const hasGivenGift = giftExchangeInfo?.assignedGiftRecipient?.itemReceived
+
+    const steps = {
+      "redeem": !recipient.redeemed,
+      "wish-list": !isInGiftExchange,
+      "shop": hasAssignedPerson && !hasGivenGift,
+      "tree": true
+    }
+
+    const currentStep = Object.entries(steps).find(([, isNext]) => isNext)[0]
+
+    setShowGiftSent(currentStep !== "tree")
+    setCurrentStep(currentStep)
+  }
 
   useEffect(() => {
-    recipientApi.get(window.location.href.split("/").slice(-1)[0]).then(setRecipient)
+    initialize()
   }, [])
-
-  useEffect(() => {
-    recipient && setCurrentStep("redeem")
-  }, [recipient])
 
   const steps = {
     "loading": <div>THE GIFTS ARE LOADING</div>,
@@ -32,7 +54,7 @@ function App() {
     "shop": <GiftShop shopper={recipient} giftAssignment={giftExchangeEntry?.assignedGiftRecipient} next={() => {
       setCurrentStep("tree")
     }} />,
-    "tree": <TreeView giftExchangeEntry={giftExchangeEntry}/>
+    "tree": <TreeView giftExchangeEntry={giftExchangeEntry} initialShowGiftSent={showGiftSent} />
   }
 
   return steps[currentStep]

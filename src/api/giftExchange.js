@@ -28,4 +28,13 @@ async function selectGift(identityToken, giftImageUrl) {
     }
 }
 
-export default { join, getItems, selectGift }
+async function get(identityToken) {
+    try {
+        const response = await axios.get(`/api/gift-exchange/${identityToken}`)
+        return response.data
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export default { join, getItems, selectGift, get }

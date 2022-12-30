@@ -28,12 +28,24 @@ app.get('/redeem/:cardtoken', (req, res) => {
 
 app.get("/api/recipient/:identityToken", (req, res) => {
     const { identityToken } = req.params
-    const recipient = { ...recipients[identityToken], identityToken }
+    const redeemedCards = readData("redeemed-cards.json")
+    const recipient = { ...recipients[identityToken], identityToken, redeemed: redeemedCards.includes(identityToken) }
     res.json(recipient)
 })
 
 app.post("/api/redeem", express.json(), (req, res) => {
-    const matches = giftCodesByRecipient[req.body.identityToken] === req.body.code
+    const { identityToken, code } = req.body
+
+    const matches = giftCodesByRecipient[identityToken] === code
+
+    if (matches) {
+        const redeemedCards = readData("redeemed-cards.json")
+
+        if (!redeemedCards.includes(identityToken)) {
+            redeemedCards.push(identityToken)
+            saveData("redeemed-cards.json", redeemedCards)
+        }
+    }
 
     res.json({
         success: matches,
@@ -116,13 +128,13 @@ app.get("/api/gift-exchange/:identityToken", express.json(), (req, res) => {
     const giftExchange = readData("gift-exchange.json")
 
     const { recipientToken, itemWanted } = giftExchange[req.params.identityToken]
-    const assignedWishListItem = giftExchange[recipientToken].itemWanted
 
     res.json({
-        assignedGiftRecipient: {
+        assignedGiftRecipient: recipientToken ? {
             name: recipients[recipientToken].name,
-            itemWanted: assignedWishListItem
-        },
+            itemWanted: giftExchange[recipientToken].itemWanted,
+            itemReceived: giftExchange[req.params.identityToken].itemGivenToRecipient
+        } : undefined,
         itemWanted
     })
 })

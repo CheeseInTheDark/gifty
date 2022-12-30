@@ -24,6 +24,16 @@ describe("App", () => {
     window.location = {
       href: "http://localhost/redeem/thetoken"
     }
+
+    giftExchange.getItems.mockReturnValue(Promise.resolve([
+      {
+        "imageUrl": testImage1,
+        "inStock": true
+      }, {
+        "imageUrl": testImage2,
+        "inStock": false
+      }
+    ]))
   })
 
   test("passes the recipient's token to retrieve their info", async () => {
@@ -54,6 +64,76 @@ describe("App", () => {
     expect(screen.queryByText(/Boat/)).toBeInTheDocument()
   })
 
+  describe("when a card recipient has already redeemed their card", () => {
+
+    beforeEach(() => {
+      recipient.get.mockReturnValue(Promise.resolve({
+        ...recipientData,
+        redeemed: true
+      }))
+    })
+
+    it("shows wish list item selection if they haven't selected their wish list item yet", async () => {
+      render(<App />)
+
+      expect(await screen.findByText(/like for Christmas/)).toBeVisible()
+    })
+
+    describe("and they've selected a wish list item", () => {
+
+      let giftExchangeInfo
+
+      beforeEach(() => {
+        giftExchange.get.mockImplementation(identityToken => 
+          identityToken === recipientData.identityToken ? Promise.resolve(giftExchangeInfo) : Promise.reject())
+      })
+
+      it("shows gift selection if they haven't selected a gift to give yet", async () => {
+        giftExchangeInfo = {
+          itemWanted: "Toast",
+          assignedGiftRecipient: {
+            name: "Cousin Bwazor",
+            itemWanted: "something that tastes like grapes but isn't grapes"
+          }
+        }
+
+        render(<App/>)
+
+        expect(await screen.findAllByRole('img')).toEqual([
+          expect.toHaveAttribute("src", testImage1), 
+          expect.toHaveAttribute("src", testImage2)
+        ])
+      })
+
+      it("shows the tree view if they have no assigned gift recipient", async () => {
+        giftExchangeInfo = {
+          itemWanted: "Toast?"
+        }
+
+        render(<App/>)
+
+        expect(await screen.findByAltText("Christmas tree")).toBeVisible()
+        expect(await screen.queryByText(/gift for/)).not.toBeInTheDocument()
+      })
+
+      it("shows the tree view if they've selected a gift to give", async () => {
+        giftExchangeInfo = {
+          itemWanted: "waterfalls",
+          assignedGiftRecipient: {
+            name: "Farlfarnarsonnur",
+            itemWanted: "something that tastes like grapes but isn't grapes",
+            itemReceived: "another image URL"
+          }
+        }
+
+        render(<App/>)
+
+        expect(await screen.findByAltText("Christmas tree")).toBeVisible()
+        expect(await screen.queryByText(/gift for/)).not.toBeInTheDocument()
+      })
+    })
+  })
+
   describe("gift code entry", () => {
 
     const failureMessage = "Your code, it is wrong.  Your ancestors are ashamed.  You will never live this down"
@@ -72,6 +152,26 @@ describe("App", () => {
         }))
 
       await screen.findByText(/Boat/)
+    })
+
+    it("shows an error message if redeeming fails", async () => {
+      await act(async () => {
+        await userEvent.click(screen.getByRole("textbox"))
+        await userEvent.keyboard("1233")
+        await userEvent.click(screen.getByText("Redeem yo'self"))
+      })
+
+      expect(await screen.findByText(/Your code, it is wrong/)).toBeVisible()
+    })
+
+    it("sends the identity token with the code", async () => {
+      await act(async () => {
+        await userEvent.click(screen.getByRole("textbox"))
+        await userEvent.keyboard("1234")
+        await userEvent.click(screen.getByText("Redeem yo'self"))
+      })
+
+      expect(giftCode.redeem).toHaveBeenCalledWith("1234", "thetoken")
     })
 
     describe("success", () => {
@@ -107,16 +207,6 @@ describe("App", () => {
               "itemWanted": "something that tastes like grapes but isn't grapes"
             }
           }))
-
-          giftExchange.getItems.mockReturnValue(Promise.resolve([
-            {
-              "imageUrl": testImage1,
-              "inStock": true
-            }, {
-              "imageUrl": testImage2,
-              "inStock": false
-            }
-          ]))
 
           await act(async () => {
             await userEvent.click(screen.getByText("Something irritating"))
@@ -183,26 +273,6 @@ describe("App", () => {
           })
         })
       })
-    })
-
-    it("shows an error message if redeeming fails", async () => {
-      await act(async () => {
-        await userEvent.click(screen.getByRole("textbox"))
-        await userEvent.keyboard("1233")
-        await userEvent.click(screen.getByText("Redeem yo'self"))
-      })
-
-      expect(await screen.findByText(/Your code, it is wrong/)).toBeVisible()
-    })
-
-    it("sends the identity token with the code", async () => {
-      await act(async () => {
-        await userEvent.click(screen.getByRole("textbox"))
-        await userEvent.keyboard("1234")
-        await userEvent.click(screen.getByText("Redeem yo'self"))
-      })
-
-      expect(giftCode.redeem).toHaveBeenCalledWith("1234", "thetoken")
     })
   })
 })
