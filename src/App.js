@@ -10,13 +10,21 @@ import GiftShop from './GiftShop'
 import TreeView from './TreeView'
 import { useCookies } from 'react-cookie'
 
+function getRecipient(token) {
+  return token ? recipientApi.get(token) : undefined
+}
+
+function getGiftExchangeInfo(token) {
+  return token ? giftExchangeApi.get(token) : undefined
+}
+
 function App() {
   const [recipient, setRecipient] = useState()
   const [giftExchangeEntry, setGiftExchangeEntry] = useState()
   const [currentStep, setCurrentStep] = useState("loading")
   const [showGiftSent, setShowGiftSent] = useState()
 
-  const [cookies, setCookie, removeCookie] = useCookies(['identityToken'])
+  const [cookies, setCookie] = useCookies(['identityToken'])
 
   function getToken() {
     const { href } = window.location
@@ -26,10 +34,21 @@ function App() {
 
   async function initialize() {
     const recipientToken = getToken()
-    const [giftExchangeInfo, recipient] = await Promise.all([giftExchangeApi.get(recipientToken), recipientApi.get(recipientToken)])
+    const [giftExchangeInfo, recipient] = await Promise.all([getGiftExchangeInfo(recipientToken), getRecipient(recipientToken)])
 
     setRecipient(recipient)
     setGiftExchangeEntry(giftExchangeInfo)
+
+    const currentStep = getCurrentStep(recipient, giftExchangeInfo)
+
+    setShowGiftSent(currentStep !== "tree")
+    setCurrentStep(currentStep)
+
+    if (recipient?.redeemed) rememberRecipient(recipient)
+  }
+
+  function getCurrentStep(recipient, giftExchangeInfo) {
+    if (!recipient) return "tree"
 
     const isInGiftExchange = !!giftExchangeInfo
     const hasAssignedPerson = !!giftExchangeInfo?.assignedGiftRecipient
@@ -42,18 +61,13 @@ function App() {
       "tree": true
     }
 
-    const currentStep = Object.entries(steps).find(([, isNext]) => isNext)[0]
-
-    setShowGiftSent(currentStep !== "tree")
-    setCurrentStep(currentStep)
-
-    if (recipient.redeemed) rememberRecipient(recipient)
+    return Object.entries(steps).find(([, isNext]) => isNext)[0]
   }
 
   function rememberRecipient(recipient) {
     const nextYear = new Date()
     nextYear.setFullYear(new Date().getFullYear() + 1)
-    setCookie("identityToken", recipient.identityToken, { path: "/", expires: nextYear })
+    setCookie("identityToken", recipient.identityToken, { path: "/", expires: nextYear, sameSite: true })
   }
 
   useEffect(() => {

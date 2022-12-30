@@ -86,6 +86,30 @@ describe("App", () => {
     expect(screen.queryByText(/Boat/)).toBeInTheDocument()
   })
 
+  describe("when the visitor is anonymous", () => {
+    beforeEach(() => {
+      recipient.get.mockReturnValue(Promise.resolve())
+      giftExchange.get.mockReturnValue(Promise.resolve())
+      setLocation("http://localhost/")
+    })
+
+    test("shows the tree view", async () => {
+      render(<App />)
+
+      expect(await screen.findByAltText("Christmas tree")).toBeVisible()
+      expect(await screen.queryByText(/gift for/)).not.toBeInTheDocument()
+    })
+  
+    test("does not fetch the recipient or gift exchange info", async () => {
+      render(<App />)
+      
+      await screen.findByAltText("Christmas tree")
+
+      expect(recipient.get).not.toHaveBeenCalled()
+      expect(giftExchange.get).not.toHaveBeenCalled()
+    })
+  })
+
   describe("when a card recipient has already redeemed their card", () => {
 
     beforeEach(() => {
