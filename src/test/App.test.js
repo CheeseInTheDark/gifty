@@ -4,6 +4,7 @@ import recipient from '../api/recipient'
 import giftCode from '../api/giftCode'
 import userEvent from '@testing-library/user-event';
 import giftExchange from '../api/giftExchange'
+import { Cookies } from 'react-cookie'
 
 jest.mock('../api/recipient')
 jest.mock('../api/giftCode')
@@ -17,13 +18,19 @@ const recipientData = {
 const testImage1 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAAMSURBVBhXY2BgYAAAAAQAAVzN/2kAAAAASUVORK5CYII="
 const testImage2 = "data:image/bmp;base64,Qk16AAAAAAAAAHYAAAAoAAAAAQAAAAEAAAABAAQAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAgAAAAICAAIAAAACAAIAAgIAAAICAgADAwMAAAAD/AAD/AAAA//8A/wAAAP8A/wD//wAA////APAAAAA="
 
+const cookies = new Cookies()
+
+function setLocation(location) {
+  delete window.location
+  window.location = {
+    href: location
+  }
+}
+
 describe("App", () => {
 
   beforeEach(() => {
-    delete window.location
-    window.location = {
-      href: "http://localhost/redeem/thetoken"
-    }
+    setLocation("http://localhost/redeem/thetoken")
 
     giftExchange.getItems.mockReturnValue(Promise.resolve([
       {
@@ -36,12 +43,27 @@ describe("App", () => {
     ]))
   })
 
-  test("passes the recipient's token to retrieve their info", async () => {
+  afterEach(() => {
+    const cookiesToRemove = Object.keys(cookies.getAll())
+    cookiesToRemove.forEach(cookie => cookies.remove(cookie))
+  })
+
+  test("passes the recipient's token to retrieve their info", () => {
     recipient.get.mockReturnValue(new Promise(resolve => { }))
 
     render(<App />)
 
     expect(recipient.get).toHaveBeenCalledWith("thetoken")
+  })
+
+  test("retrieves the recipient's info using the cookie if not on the redeem page", () => {
+    recipient.get.mockReturnValue(new Promise(resolve => { }))
+    setLocation("http://localhost/")
+    cookies.set("identityToken", "Whoahhh z z z z")
+
+    render(<App />)
+
+    expect(recipient.get).toHaveBeenCalledWith("Whoahhh z z z z")
   })
 
   test("waits for the recipient's name to load", async () => {
@@ -77,6 +99,14 @@ describe("App", () => {
       render(<App />)
 
       expect(await screen.findByText(/like for Christmas/)).toBeVisible()
+    })
+
+    it("sets a cookie to remember the visitor's identity token", async () => {
+      render(<App />)
+
+      await screen.findByText(/like for Christmas/)
+
+      expect(cookies.get("identityToken")).toBe("thetoken")
     })
 
     describe("and they've selected a wish list item", () => {
@@ -174,6 +204,10 @@ describe("App", () => {
       expect(giftCode.redeem).toHaveBeenCalledWith("1234", "thetoken")
     })
 
+    it("does not set a cookie yet", () => {
+      expect(cookies.get("identityToken")).toBeUndefined()
+    })
+
     describe("success", () => {
       beforeEach(async () => {
         await act(async () => {
@@ -181,6 +215,10 @@ describe("App", () => {
           await userEvent.keyboard("1234")
           await userEvent.click(screen.getByText("Redeem yo'self"))
         })
+      })
+
+      it("sets a cookie to remember the visitor's identity token", () => {
+        expect(cookies.get("identityToken")).toBe("thetoken")
       })
 
       it("does not show an error message", async () => {

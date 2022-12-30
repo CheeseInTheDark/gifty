@@ -8,7 +8,7 @@ import GiftCodeEntry from './GiftCodeEntry'
 import WishListEntry from './WishListEntry'
 import GiftShop from './GiftShop'
 import TreeView from './TreeView'
-
+import { useCookies } from 'react-cookie'
 
 function App() {
   const [recipient, setRecipient] = useState()
@@ -16,8 +16,16 @@ function App() {
   const [currentStep, setCurrentStep] = useState("loading")
   const [showGiftSent, setShowGiftSent] = useState()
 
+  const [cookies, setCookie, removeCookie] = useCookies(['identityToken'])
+
+  function getToken() {
+    const { href } = window.location
+
+    return href.includes("redeem/") ? href.split("/").slice(-1)[0] : cookies.identityToken
+  }
+
   async function initialize() {
-    const recipientToken = window.location.href.split("/").slice(-1)[0]
+    const recipientToken = getToken()
     const [giftExchangeInfo, recipient] = await Promise.all([giftExchangeApi.get(recipientToken), recipientApi.get(recipientToken)])
 
     setRecipient(recipient)
@@ -38,6 +46,14 @@ function App() {
 
     setShowGiftSent(currentStep !== "tree")
     setCurrentStep(currentStep)
+
+    if (recipient.redeemed) rememberRecipient(recipient)
+  }
+
+  function rememberRecipient(recipient) {
+    const nextYear = new Date()
+    nextYear.setFullYear(new Date().getFullYear() + 1)
+    setCookie("identityToken", recipient.identityToken, { path: "/", expires: nextYear })
   }
 
   useEffect(() => {
@@ -46,7 +62,10 @@ function App() {
 
   const steps = {
     "loading": <div>THE GIFTS ARE LOADING</div>,
-    "redeem": <GiftCodeEntry recipient={recipient} next={() => setCurrentStep("wish-list")} />,
+    "redeem": <GiftCodeEntry recipient={recipient} next={() => {
+      rememberRecipient(recipient)
+      setCurrentStep("wish-list")
+    }} />,
     "wish-list": <WishListEntry recipient={recipient} next={(giftExchangeEntry) => {
       setCurrentStep("shop")
       setGiftExchangeEntry(giftExchangeEntry)
