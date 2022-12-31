@@ -41,9 +41,9 @@ describe(TreeView, () => {
             await screen.findAllByRole("img")
 
             expect(await screen.findAllByRole("img")).toEqual(expect.arrayContaining([
-                expect.toHaveAttribute("src", "images/gift1.png"),
-                expect.toHaveAttribute("src", "images/gift2.png"),
-                expect.toHaveAttribute("src", "images/gift3.png")
+                expect.toHaveAttribute("src", "/images/gift1.png"),
+                expect.toHaveAttribute("src", "/images/gift2.png"),
+                expect.toHaveAttribute("src", "/images/gift3.png")
             ]))
         })
 
@@ -53,7 +53,7 @@ describe(TreeView, () => {
                     render(<TreeView giftExchangeEntry={{}} initialShowGiftSent={false} />)
                 })
 
-                const firstGift = (await screen.findAllByRole("img")).find(element => element.getAttribute("src") === "images/gift2.png")
+                const firstGift = (await screen.findAllByRole("img")).find(element => element.getAttribute("src") === "/images/gift2.png")
                 await userEvent.click(firstGift)
             })
 

@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react'
-import './App.css'
-
 import recipientApi from './api/recipient'
 import giftExchangeApi from './api/giftExchange'
 

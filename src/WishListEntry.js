@@ -59,9 +59,11 @@ export default function WishlistEntry({ recipient, next }) {
 
     return <>
         <div>{wishListPrompt}</div>
+        <div className="stack-of-things" >
         {
             choices.map((choice, index) => 
                 <button data-testid="wishlist-choice" onClick={() => submit(choice)} key={index}>{choice}</button>)
         }
+        </div>
     </>
 }

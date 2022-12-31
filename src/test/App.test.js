@@ -288,7 +288,7 @@ describe("App", () => {
         })
 
         it("shows who you're shopping for and what they want", async () => {
-          expect(await screen.findByText(/Farlfarnarsonnur/)).toBeVisible()
+          expect((await screen.findAllByText(/Farlfarnarsonnur/))).toContainEqual(expect.toBeVisible())
           expect(await screen.findByText(/something that tastes like grapes but isn't grapes/)).toBeVisible()
         })
 

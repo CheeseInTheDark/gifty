@@ -15,7 +15,7 @@ export default function GiftCodeEntry({ recipient, next }) {
     }
 
     return <>
-        <div>Welcome {recipient?.name}!</div>
+        <h1>Welcome {recipient?.name}!</h1>
         <div>Please enter the code shown on your captive funds card</div>
         <input onChange={event => {
             setEnteredGiftCode(event.target.value)

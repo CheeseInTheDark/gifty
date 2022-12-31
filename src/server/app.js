@@ -82,7 +82,7 @@ app.post("/api/gift-exchange", express.json(), (req, res) => {
 
 app.get("/api/gift-exchange/items", (req, res) => {
     const giftExchange = readData("gift-exchange.json")
-
+    
     const response = giftOptions.map(option => ({
         imageUrl: option,
         inStock: isInStock(option, giftExchange)
