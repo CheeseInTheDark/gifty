@@ -434,5 +434,17 @@ describe("app", () => {
 
             expect(JSON.parse(response.text)).toHaveLength(0)
         })
+
+        it("does not explode when someone hasn't been assigned a gift recipient yet", async () => {
+            fs.writeFileSync(path.join(dataPath, "gift-exchange.json"), JSON.stringify({
+                "woobular": {
+                    "itemWanted": "bag o bricks"
+                }
+            }))
+
+            const response = await request(subject).get("/api/gift-exchange/gifts")
+
+            expect(JSON.parse(response.text)).toHaveLength(0)
+        })
     })
 })
