@@ -389,6 +389,26 @@ describe("app", () => {
                 }
             ])
         })
+
+        it("sets a gift's inStock to false when it's already been gifted", async () => {
+            fs.writeFileSync(path.join(dataPath, "gift-exchange.json"), JSON.stringify({
+                "woobular": {
+                    "itemGivenToRecipient": "some image URL"
+                }
+            }))
+
+            const response = await request(subject).get("/api/gift-exchange/items")
+
+            expect(JSON.parse(response.text)).toEqual([
+                {
+                    imageUrl: "some image URL",
+                    inStock: false
+                }, {
+                    imageUrl: "another image URL",
+                    inStock: true
+                }
+            ])
+        })
     })
 
     describe("/api/gift-exchange/gifts GET", () => {

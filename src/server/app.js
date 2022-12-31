@@ -81,9 +81,11 @@ app.post("/api/gift-exchange", express.json(), (req, res) => {
 })
 
 app.get("/api/gift-exchange/items", (req, res) => {
+    const giftExchange = readData("gift-exchange.json")
+
     const response = giftOptions.map(option => ({
         imageUrl: option,
-        inStock: true
+        inStock: isInStock(option, giftExchange)
     }))
 
     res.json(response)
@@ -114,8 +116,6 @@ app.post("/api/gift-exchange/:identityToken/selected-gift", express.json(), (req
         return
     }
 
-    const inStock = !Object.values(giftExchange).some(entry => entry.itemGivenToRecipient === gift)
-
     if (!giftExchange[identityToken]) {
         res.status(404).send()
         return
@@ -126,7 +126,7 @@ app.post("/api/gift-exchange/:identityToken/selected-gift", express.json(), (req
         return
     }
 
-    if (inStock) {
+    if (isInStock(gift, giftExchange)) {
         giftExchange[identityToken].itemGivenToRecipient = gift
         saveData("gift-exchange.json", giftExchange)
         res.json({ success: true, gift })
@@ -150,6 +150,9 @@ app.get("/api/gift-exchange/:identityToken", express.json(), (req, res) => {
     })
 })
 
+function isInStock(gift, giftExchange) {
+    return !Object.values(giftExchange).some(entry => entry.itemGivenToRecipient === gift)
+}
 
 app.use(express.static(staticDirectory))
 
