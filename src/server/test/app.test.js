@@ -390,4 +390,49 @@ describe("app", () => {
             ])
         })
     })
+
+    describe("/api/gift-exchange/gifts GET", () => {
+        it("returns given gifts with names", async () => {
+            fs.writeFileSync(path.join(dataPath, "gift-exchange.json"), JSON.stringify({
+                "woobular": {
+                    "itemWanted": "bag o bricks",
+                    "recipientToken": "Tubular",
+                    "itemGivenToRecipient": "some image URL"
+                },
+                "Tubular": {
+                    "itemWanted": "bottle caps",
+                    "recipientToken": "woobular",
+                    "itemGivenToRecipient": "more image URL"
+                }
+            }))
+
+            const response = await request(subject).get("/api/gift-exchange/gifts")
+
+            expect(JSON.parse(response.text)).toEqual(expect.arrayContaining([
+                {
+                    from: "Gift Person",
+                    to: "Person with tubes",
+                    gift: "some image URL"
+                },
+                {
+                    from: "Person with tubes",
+                    to: "Gift Person",
+                    gift: "more image URL"
+                }
+            ]))
+        })
+
+        it("does not return gifts that haven't been given yet", async () => {
+            fs.writeFileSync(path.join(dataPath, "gift-exchange.json"), JSON.stringify({
+                "woobular": {
+                    "itemWanted": "bag o bricks",
+                    "recipientToken": "Tubular"
+                }
+            }))
+
+            const response = await request(subject).get("/api/gift-exchange/gifts")
+
+            expect(JSON.parse(response.text)).toHaveLength(0)
+        })
+    })
 })

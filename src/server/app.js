@@ -89,6 +89,17 @@ app.get("/api/gift-exchange/items", (req, res) => {
     res.json(response)
 })
 
+app.get("/api/gift-exchange/gifts", (req, res) => {
+    const giftExchange = readData("gift-exchange.json")
+
+    const gifts = Object.entries(giftExchange).map(([giverToken, { recipientToken, itemGivenToRecipient }]) => ({
+        from: recipients[giverToken].name,
+        to: recipients[recipientToken].name,
+        gift: itemGivenToRecipient
+    })).filter(gift => gift.gift !== undefined)
+
+    res.json(gifts)
+})
 
 app.post("/api/gift-exchange/:identityToken/selected-gift", express.json(), (req, res) => {
     const { identityToken } = req.params

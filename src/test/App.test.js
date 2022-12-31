@@ -32,6 +32,7 @@ describe("App", () => {
   beforeEach(() => {
     setLocation("http://localhost/redeem/thetoken")
 
+    giftExchange.getGivenGifts.mockReturnValue(Promise.resolve([]))
     giftExchange.getItems.mockReturnValue(Promise.resolve([
       {
         "imageUrl": testImage1,

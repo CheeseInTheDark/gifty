@@ -37,4 +37,13 @@ async function get(identityToken) {
     }
 }
 
-export default { join, getItems, selectGift, get }
+async function getGivenGifts() {
+    try {
+        const response = await axios.get(`/api/gift-exchange/gifts`)
+        return response.data
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export default { join, getItems, selectGift, get, getGivenGifts }

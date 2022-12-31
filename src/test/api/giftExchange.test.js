@@ -3,6 +3,30 @@ import axios from 'axios'
 
 describe("gift exchange api", () => {
 
+    describe("get given gifts", () => {
+        test("gets the gifts that have been given", () => {
+            jest.spyOn(axios, "get").mockImplementation(() => Promise.resolve({ data: "Response "}))
+
+            subject.getGivenGifts()
+        
+            expect(axios.get).toHaveBeenCalledWith("/api/gift-exchange/gifts")
+        })
+
+        test("returns the result from response", async () => {
+            jest.spyOn(axios, "get").mockImplementation(() => Promise.resolve({ data: "Response" }))
+
+            const result = await subject.getGivenGifts()
+
+            expect(result).toEqual("Response")
+        })
+
+        test("consumes exceptions", async () => {
+            jest.spyOn(axios, "get").mockImplementation(() => Promise.reject())
+
+            await subject.getGivenGifts()
+        })
+    })
+
     describe("get", () => {
         test("gets the gift exchange info for the given identity token", () => {
             jest.spyOn(axios, "get").mockImplementation(() => Promise.resolve({ data: "Response "}))
