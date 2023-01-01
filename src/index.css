@@ -36,11 +36,13 @@ button {
 }
 
 .in-stock-gift {
+  height: 150px;
   box-shadow: 3px 3px 3px lightgrey;
   margin-right: 20px;
 }
 
 .out-of-stock-gift {
+  height: 150px;
   box-shadow: 3px 3px 3px lightgrey;
   filter: opacity(10%);
   margin-right: 20px;
@@ -51,6 +53,7 @@ button {
 }
 
 .dialog-background {
+  z-index: 1;
   width: 100%;
   height: 100%;
   top: 0;
@@ -63,8 +66,21 @@ button {
 }
 
 .dialog {
+  z-index: 2;
   margin-top: 40px;
   background-color: white;
   padding: 20px;
   max-width: 70%;
+}
+
+.tree-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gift-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }

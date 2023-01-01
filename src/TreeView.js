@@ -26,13 +26,20 @@ export default function TreeView({ giftExchangeEntry, initialShowGiftSent }) {
             <button onClick={closeGiftSent}>Why are you showing me a popup?  Get this thing out of here</button>
         </Dialog> : null }
         { selectedGift ? <Dialog onBackgroundClick={closeGiftInfo}>
-            <div>From {selectedGift.from} To {selectedGift.to} </div>
-            <img src={selectedGift.gift}/>
+            <p>From {selectedGift.from}</p>
+            <p>To {selectedGift.to} </p>
+            <div className="gift-container">
+                <img src={selectedGift.gift}/>
+            </div>
             <button onClick={closeGiftInfo}>You can make this box go away now</button>
         </Dialog> : null }
-        <img alt="Christmas tree" src="/images/tree.png"/>
-        {
-            gifts.map((gift, index) => <img src={`/images/gift${index + 1}.png`} key={gift.gift} onClick={() => setSelectedGift(gift)}/>)
-        }
+        <div className="tree-container">
+            <img alt="Christmas tree" src="/images/tree.png"/>
+            <div className="gifts-container">
+            {
+                gifts.map((gift, index) => <img src={`/images/gift${index + 1}.png`} key={gift.gift} onClick={() => setSelectedGift(gift)}/>)
+            }
+            </div>
+        </div>
     </>
 }
