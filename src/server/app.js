@@ -22,7 +22,7 @@ app.get('/redeem/:cardtoken', (req, res) => {
     const recipientExists = Object.keys(recipients).includes(req.params.cardtoken)
    
     recipientExists ? 
-        res.sendFile(path.join(staticDirectory, "index.html")) : 
+        res.sendFile(path.resolve(staticDirectory, "index.html")) : 
         res.status(404).send()
 })
 
@@ -82,7 +82,7 @@ app.post("/api/gift-exchange", express.json(), (req, res) => {
 
 app.get("/api/gift-exchange/items", (req, res) => {
     const giftExchange = readData("gift-exchange.json")
-    
+
     const response = giftOptions.map(option => ({
         imageUrl: option,
         inStock: isInStock(option, giftExchange)

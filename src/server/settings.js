@@ -1,5 +1,5 @@
 module.exports = {
     port: 5000,
-    staticDirectory: '../../public/',
+    staticDirectory: '../../build/',
     dataDirectory: '../../data/'
 }
