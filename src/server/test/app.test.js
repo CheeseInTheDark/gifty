@@ -467,4 +467,126 @@ describe("app", () => {
             expect(JSON.parse(response.text)).toHaveLength(0)
         })
     })
+
+   
+    test("/api/decoration GET returns the decorations", async () => {
+        fs.writeFileSync(path.join(dataPath, "decorations.json"), JSON.stringify([{
+            type: "blue bulb",
+            x: 123,
+            y: 456,
+            addedBy: "coolidentitytoken"    
+        }, {
+            type: "red bulb",
+            x: 300,
+            y: 1,
+            addedBy: "woobular"   
+        }]))
+
+        const response = await request(subject).get("/api/decoration")
+
+        expect(JSON.parse(response.text)).toEqual(
+            expect.arrayContaining([{
+                type: "blue bulb",
+                x: 123,
+                y: 456,
+                addedBy: "Charlie"    
+            }, {
+                type: "red bulb",
+                x: 300,
+                y: 1,
+                addedBy: "Gift Person"   
+            }]
+        ))
+    })
+
+    describe("/api/decoration POST", () => {
+        beforeEach(() => {
+            fs.writeFileSync(path.join(dataPath, "decorations.json"), JSON.stringify([{
+                type: "green bulb", 
+                x: 1,
+                y: 3300,
+                addedBy: "woobular"
+            }]))
+        })
+
+        test("adds the new decoration for a known user and decoration", async () => {
+            await request(subject).post("/api/decoration").send({
+                decoration: {
+                    type: "blue bulb",
+                    x: 1,
+                    y: 2,
+                },
+                identityToken: "coolidentitytoken"
+            })
+
+            const decorations = JSON.parse(fs.readFileSync(path.join(dataPath, "decorations.json")))
+            expect(decorations).toEqual([{
+                type: "green bulb", 
+                x: 1,
+                y: 3300,
+                addedBy: "woobular"
+            }, {
+                type: "blue bulb",
+                x: 1,
+                y: 2,
+                addedBy: "coolidentitytoken"
+            }])
+        })
+
+        test("returns 401 for an unknown user", async () => {
+            const response = await request(subject).post("/api/decoration").send({
+                decoration: {
+                    type: "blue bulb",
+                    x: 1,
+                    y: 2,
+                },
+                identityToken: "not someone we know about"
+            })
+
+            expect(response.status).toBe(401)
+        })
+
+        test("returns 400 for an unknown decoration type", async () => {
+            const response = await request(subject).post("/api/decoration").send({
+                decoration: {
+                    type: "a real fandango",
+                    x: 1,
+                    y: 2,
+                },
+                identityToken: "woobular"
+            })
+
+            expect(response.status).toBe(400)
+        })
+    })
+
+    test("/api/decoration POST adds the new decoration", async () => {
+        fs.writeFileSync(path.join(dataPath, "decorations.json"), JSON.stringify([{
+            type: "blue bulb",
+            x: 123,
+            y: 456,
+            addedBy: "coolidentitytoken"    
+        }, {
+            type: "red bulb",
+            x: 300,
+            y: 1,
+            addedBy: "woobular"   
+        }]))
+
+        const response = await request(subject).get("/api/decoration")
+
+        expect(JSON.parse(response.text)).toEqual(
+            expect.arrayContaining([{
+                type: "blue bulb",
+                x: 123,
+                y: 456,
+                addedBy: "Charlie"    
+            }, {
+                type: "red bulb",
+                x: 300,
+                y: 1,
+                addedBy: "Gift Person"   
+            }]
+        ))
+    })
 })

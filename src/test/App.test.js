@@ -5,10 +5,12 @@ import giftCode from '../api/giftCode'
 import userEvent from '@testing-library/user-event';
 import giftExchange from '../api/giftExchange'
 import { Cookies } from 'react-cookie'
+import decorations from '../api/decorations';
 
 jest.mock('../api/recipient')
 jest.mock('../api/giftCode')
 jest.mock('../api/giftExchange')
+jest.mock('../api/decorations')
 
 const recipientData = {
   name: "Boat",
@@ -32,6 +34,7 @@ describe("App", () => {
   beforeEach(() => {
     setLocation("http://localhost/redeem/thetoken")
 
+    decorations.get.mockReturnValue(Promise.resolve([]))
     giftExchange.getGivenGifts.mockReturnValue(Promise.resolve([]))
     giftExchange.getItems.mockReturnValue(Promise.resolve([
       {
@@ -100,10 +103,10 @@ describe("App", () => {
       expect(await screen.findByAltText("Christmas tree")).toBeVisible()
       expect(await screen.queryByText(/gift for/)).not.toBeInTheDocument()
     })
-  
+
     test("does not fetch the recipient or gift exchange info", async () => {
       render(<App />)
-      
+
       await screen.findByAltText("Christmas tree")
 
       expect(recipient.get).not.toHaveBeenCalled()
@@ -139,7 +142,7 @@ describe("App", () => {
       let giftExchangeInfo
 
       beforeEach(() => {
-        giftExchange.get.mockImplementation(identityToken => 
+        giftExchange.get.mockImplementation(identityToken =>
           identityToken === recipientData.identityToken ? Promise.resolve(giftExchangeInfo) : Promise.reject())
       })
 
@@ -152,10 +155,10 @@ describe("App", () => {
           }
         }
 
-        render(<App/>)
+        render(<App />)
 
         expect(await screen.findAllByRole('img')).toEqual([
-          expect.toHaveAttribute("src", testImage1), 
+          expect.toHaveAttribute("src", testImage1),
           expect.toHaveAttribute("src", testImage2)
         ])
       })
@@ -165,7 +168,7 @@ describe("App", () => {
           itemWanted: "Toast?"
         }
 
-        render(<App/>)
+        render(<App />)
 
         expect(await screen.findByAltText("Christmas tree")).toBeVisible()
         expect(await screen.queryByText(/gift for/)).not.toBeInTheDocument()
@@ -181,7 +184,7 @@ describe("App", () => {
           }
         }
 
-        render(<App/>)
+        render(<App />)
 
         expect(await screen.findByAltText("Christmas tree")).toBeVisible()
         expect(await screen.queryByText(/gift for/)).not.toBeInTheDocument()
@@ -198,7 +201,7 @@ describe("App", () => {
 
       render(<App />)
 
-      giftCode.redeem.mockImplementation((code, identityToken) => 
+      giftCode.redeem.mockImplementation((code, identityToken) =>
         Promise.resolve(code === "1234" && identityToken === "thetoken" ? {
           success: true
         } : {
@@ -282,7 +285,7 @@ describe("App", () => {
 
         it("displays available gifts from the gift shop", async () => {
           expect(await screen.findAllByRole('img')).toEqual([
-            expect.toHaveAttribute("src", testImage1), 
+            expect.toHaveAttribute("src", testImage1),
             expect.toHaveAttribute("src", testImage2)
           ])
         })
@@ -294,7 +297,7 @@ describe("App", () => {
 
         it("does not allow selection of items that are out of stock", async () => {
           const outOfStockItem = (await screen.findAllByRole('img'))[1]
-          
+
           await act(async () => { await userEvent.click(outOfStockItem) })
 
           expect(giftExchange.selectGift).not.toHaveBeenCalled()
@@ -305,14 +308,14 @@ describe("App", () => {
             giftExchange.selectGift.mockReturnValue(Promise.resolve({ success: true }))
 
             const inStockItem = (await screen.findAllByRole('img'))[0]
-          
+
             await act(async () => { await userEvent.click(inStockItem) })
           })
 
           it("submits the selected in-stock gift", async () => {
             expect(giftExchange.selectGift).toHaveBeenCalledWith("thetoken", testImage1)
           })
-  
+
           it("shows a message that their gift is on the way", async () => {
             expect(await screen.findByText(/gift for Farlfarnarsonnur/)).toBeVisible()
           })
@@ -321,7 +324,7 @@ describe("App", () => {
             beforeEach(async () => {
               const okayButton = await screen.findByText(/Why are you showing me a popup\?/)
 
-              await act(async () => { await userEvent.click(okayButton)})
+              await act(async () => { await userEvent.click(okayButton) })
             })
 
             it("shows a christmas tree", async () => {

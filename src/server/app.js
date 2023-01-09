@@ -154,6 +154,45 @@ function isInStock(gift, giftExchange) {
     return !Object.values(giftExchange).some(entry => entry.itemGivenToRecipient === gift)
 }
 
+app.get("/api/decoration", (req, res) => {
+    const decorations = readData("decorations.json")
+
+    const decorationsWithoutTokens = decorations.map(decoration => ({
+        ...decoration,
+        addedBy: recipients[decoration.addedBy].name
+    }))
+
+    res.json(decorationsWithoutTokens)
+})
+
+const decorationTypes = [
+    'blue bulb',
+    'red bulb',
+    'green bulb',
+    'gold bulb',
+]
+
+app.post("/api/decoration", express.json(), (req, res) => {
+    const { identityToken, decoration } = req.body
+
+    if (!recipients[identityToken]) return res.status(401).end()
+
+    if (!decorationTypes.includes(decoration.type)) return res.status(400).end()
+
+    const decorations = readData("decorations.json")
+
+    decorations.push({
+        addedBy: identityToken,
+        x: decoration.x,
+        y: decoration.y,
+        type: decoration.type
+    })
+
+    saveData("decorations.json", decorations)
+
+    res.status(200).send()
+})
+
 app.use(express.static(staticDirectory))
 
 module.exports = app

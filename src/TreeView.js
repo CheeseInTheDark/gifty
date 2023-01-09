@@ -1,15 +1,25 @@
 import { useEffect, useState } from "react"
 
 import giftExchangeApi from "./api/giftExchange"
+import decorationApi from "./api/decorations"
+
 import Dialog from "./Dialog"
+import Decoration from "./Decoration"
+import DecorationToolbar from "./DecorationToolbar"
+import { useCookies } from "react-cookie"
 
 export default function TreeView({ giftExchangeEntry, initialShowGiftSent }) {
     const [showGiftSent, setShowGiftSent] = useState(initialShowGiftSent)
     const [gifts, setGifts] = useState([])
     const [selectedGift, setSelectedGift] = useState()
+    const [selectedDecoration, setSelectedDecoration] = useState()
+    const [decorationsOnTree, setDecorationsOnTree] = useState([])
+
+    const [{ identityToken }] = useCookies(['identityToken'])
 
     useEffect(() => {
         giftExchangeApi.getGivenGifts().then(setGifts)
+        decorationApi.get().then(setDecorationsOnTree)
     }, [])
 
     function closeGiftSent() {
@@ -18,6 +28,21 @@ export default function TreeView({ giftExchangeEntry, initialShowGiftSent }) {
 
     function closeGiftInfo() {
         setSelectedGift(undefined)
+    }
+
+    function placeDecoration(clickEvent) {
+        if (!selectedDecoration) return
+
+        const toAdd = {
+            type: selectedDecoration,
+            x: clickEvent.nativeEvent.offsetX,
+            y: clickEvent.nativeEvent.offsetY
+        }
+        
+        console.log(selectedDecoration)
+
+        decorationApi.add(toAdd, identityToken)
+        setDecorationsOnTree([...decorationsOnTree, toAdd])
     }
 
     return <>
@@ -33,8 +58,13 @@ export default function TreeView({ giftExchangeEntry, initialShowGiftSent }) {
             </div>
             <button onClick={closeGiftInfo}>You can make this box go away now</button>
         </Dialog> : null }
+        { identityToken ? <DecorationToolbar onDecorationSelected={setSelectedDecoration}/> : null }
         <div className="tree-container">
-            <img alt="Christmas tree" src="/images/tree.png"/>
+            <div style={{position: 'relative'}}>
+                <img alt="Christmas tree" onClick={placeDecoration} src="/images/tree.png"/>
+                {decorationsOnTree.map((decoration, index) => 
+                    <Decoration {...decoration} key={index + decoration.type}/>)}
+            </div>
             <div className="gifts-container">
             {
                 gifts.map((gift, index) => <img src={`/images/gift${index + 1}.png`} key={gift.gift} onClick={() => setSelectedGift(gift)}/>)
