@@ -308,8 +308,10 @@ describe("App", () => {
             giftExchange.selectGift.mockReturnValue(Promise.resolve({ success: true }))
 
             const inStockItem = (await screen.findAllByRole('img'))[0]
-
             await act(async () => { await userEvent.click(inStockItem) })
+
+            const confirmationButton = (await screen.findByText("Do eeeet"))
+            await act(async () => { await userEvent.click(confirmationButton) })
           })
 
           it("submits the selected in-stock gift", async () => {
