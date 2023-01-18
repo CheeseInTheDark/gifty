@@ -97,7 +97,8 @@ app.get("/api/gift-exchange/gifts", (req, res) => {
     const gifts = Object.entries(giftExchange).map(([giverToken, { recipientToken, itemGivenToRecipient }]) => ({
         from: recipients[giverToken].name,
         to: recipients[recipientToken]?.name,
-        gift: itemGivenToRecipient
+        gift: itemGivenToRecipient,
+        itemWanted: giftExchange[recipientToken].itemWanted        
     })).filter(gift => gift.gift !== undefined)
 
     res.json(gifts)

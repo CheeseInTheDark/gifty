@@ -15,9 +15,9 @@ export default function TreeView({ giftExchangeEntry, initialShowGiftSent }) {
     const [selectedDecoration, setSelectedDecoration] = useState()
     const [decorationsOnTree, setDecorationsOnTree] = useState([])
 
-    const [{ identityToken }] = useCookies(['identityToken'])
+    const [{ identityToken }] = useCookies(['identityToken'])        
 
-    useEffect(() => {
+    useEffect(() => {  
         giftExchangeApi.getGivenGifts().then(setGifts)
         decorationApi.get().then(setDecorationsOnTree)
     }, [])
@@ -51,8 +51,9 @@ export default function TreeView({ giftExchangeEntry, initialShowGiftSent }) {
             <button onClick={closeGiftSent}>Why are you showing me a popup?  Get this thing out of here</button>
         </Dialog> : null }
         { selectedGift ? <Dialog onBackgroundClick={closeGiftInfo}>
-            <p>From {selectedGift.from}</p>
+            <p>From {selectedGift.from}</p> 
             <p>To {selectedGift.to} </p>
+            <p>...because you wanted {selectedGift.itemWanted}</p>
             <div className="gift-container">
                 <img src={selectedGift.gift}/>
             </div>

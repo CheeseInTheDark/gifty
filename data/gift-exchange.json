@@ -1,5 +1,1 @@
-{
-    "whatever": {
-        "itemWanted": "toast"
-    }
-}
+{"whatever":{"itemWanted":"toast","recipientToken":"yay"},"yay":{"itemWanted":"Something that makes me feel groovy","recipientToken":"whatever","itemGivenToRecipient":"/gifts/2.jpg"}}

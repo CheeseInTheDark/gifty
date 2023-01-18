@@ -76,10 +76,16 @@ describe(TreeView, () => {
             it("show the gift giver and recipient", async () => {
                 expect(await screen.findByText(/From Zombino/)).toBeVisible()
                 expect(await screen.findByText(/To Merger Doogar/)).toBeVisible()
+
+                expect(await screen.findByText(/Because you wanted/)).toBeVisible()
             })
     
             it("show what's in the box", async () => {
                 expect(await screen.findAllByRole("img")).toContainEqual(expect.toHaveAttribute("src", "some image URL?"))
+            })
+
+            it("show what item was wanted", async () => {
+                expect(await screen.findByText(/...because you wanted/)).toBeVisible()
             })
 
             it("hides the gift info when the dialog is clicked", async () => {
